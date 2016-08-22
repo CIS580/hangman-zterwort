@@ -4,6 +4,7 @@ var lettersDiv = document.getElementById('letters');
 var guessesDiv = document.getElementById('guesses');
 var secretWord = "";
 var blanks = "";
+var wrongGuesses = 0;
 
 /**
  * Initializes a new game.
@@ -14,6 +15,7 @@ function init() {
   drawStickMan(0);
   chooseSecretWord();
   drawBlanks();
+  wrongGuesses = 0;
 };
 init();
 
@@ -54,13 +56,37 @@ function guessLetter(elm) {
   node = document.createElement('span');
   node.innerHTML = letter;
   guessesDiv.appendChild(node);
-
-  // TODO: Determine if the letter is in the secret word,
-  // if so, reveal it in the secretWordDiv, otherwise
-  // add a part to our hangman
-
-  // TODO: Determine if the game is over, and if so,
-  // let the player know if they have won or lost
+  
+  //Checks if the letter is in the secret word. If so,
+  //it will then replace the underscore with the letter, and
+  //mark that it was a correct guess.
+  var letterFound = false;
+  for( var i = 0; i < secretWord.length; i++)
+  {
+	if(secretWord.charAt(i) == letter.toLowerCase())
+	{
+		wordDiv.children[i].innerHTML = letter.toLowerCase();
+		letterFound = true;
+	}
+  }
+  
+  //Checks if the guess was correct or not. If wrong,
+  //it will up the amount of wrong guesses and draw a body part.
+  if(letterFound == false)
+  {
+	  wrongGuesses++;
+	  drawStickMan(wrongGuesses);
+  }
+  
+  //Checks if the game is over by looking for underscores.
+  for( var i = 0; i < secretWord.length; i++)
+  {
+	if(wordDiv.children[i].innerHTML == "_")
+	{
+		return;
+	}
+  }
+  gameOver(1);
 }
 
 /**
@@ -71,8 +97,13 @@ function drawStickMan(wrongGuesses) {
   if(wrongGuesses == 0) {
     scaffold.src = "scaffold.png";
   }
-  else {
+  else {	  
     scaffold.src = "stickman" + wrongGuesses + ".png";
+	setTimeout(function(){
+		if(wrongGuesses == 6){
+		gameOver(0);
+		}
+	}, 200);
   }
 }
 
@@ -99,4 +130,30 @@ function drawBlanks(){
     html.push('<span>' + blanks.charAt(i) + '</span>');
   }
   wordDiv.innerHTML = html.join('');
+}
+
+/**
+ * Determines if the user won, or lost and displays the result 
+ * to the user.
+ * @param {winOrLose} 0 for lose, anything else for win.
+ */
+function gameOver(winOrLose){
+	if(winOrLose == 0){
+		var continuePlaying = window.confirm("You Lost! \n\nWould you like to continue playing? Press Ok to start another round, or cancel to stop playing.")
+	}
+	else{
+		var continuePlaying = window.confirm("You Won! \n\nWould you like to continue playing? Press Ok to start another round, or cancel to stop playing.")
+	}
+	
+	if(continuePlaying){
+		init();
+	}
+	else{
+		var lettersLeft = letters.children.length;
+		for(var j = 0; j < lettersLeft; j++){
+			letters.children[j].removeAttribute("onclick");
+			letters.children[j].removeAttribute("href");
+		}
+		window.alert("Have a good day!");
+	}
 }
